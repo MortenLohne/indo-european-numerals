@@ -59,8 +59,20 @@ tocharianB =
     }
 
 
+irish : Language
+irish =
+    { name = "Irish"
+    , description = ""
+    , options =
+        List.map2
+            (\i name -> { number = i, nameRomanized = name, nameIPA = name })
+            (List.range 1 10)
+            [ "aon", "dó", "trí", "ceathair", "cúig", "sé", "seacht", "ocht", "naoi", "deich" ]
+    }
+
+
 languages =
-    [ english, tocharianB ]
+    [ english, tocharianB, irish ]
 
 
 init : () -> ( Model, Cmd Msg )
@@ -85,7 +97,7 @@ randomLanguage =
             in
             Maybe.withDefault english language
         )
-        (Random.int 0 1)
+        (Random.int 0 (List.length languages - 1))
         |> Cmd.map
             (\language ->
                 SwitchLanguage
