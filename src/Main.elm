@@ -1,13 +1,11 @@
 module Main exposing (Model, Msg(..), init, main, update, view)
 
 import Browser
-import Html exposing (Html, button, div, text)
-import Html.Events exposing (onClick)
+import Html exposing (..)
+import Html.Events exposing (..)
 import List
-
-
-main =
-    Browser.sandbox { init = init, update = update, view = view }
+import Platform.Cmd
+import Random
 
 
 type Submission
@@ -61,12 +59,40 @@ tocharianB =
     }
 
 
-init : Model
+languages =
+    [ english, tocharianB ]
+
+
+init : () -> ( Model, Cmd Msg )
 init =
-    { submission = None
-    , language = tocharianB
-    , options = tocharianB.options
-    }
+    \_ ->
+        ( { submission = None
+          , language = tocharianB
+          , options = tocharianB.options
+          }
+        , randomLanguage
+        )
+
+
+randomLanguage : Cmd Msg
+randomLanguage =
+    Random.generate
+        (\i ->
+            let
+                language =
+                    List.drop i languages
+                        |> List.head
+            in
+            Maybe.withDefault english language
+        )
+        (Random.int 0 1)
+        |> Cmd.map
+            (\language ->
+                SwitchLanguage
+                    ( language
+                    , language.options
+                    )
+            )
 
 
 
@@ -74,15 +100,19 @@ init =
 
 
 type Msg
-    = Submit Submission
+    = SwitchLanguage ( Language, List ButtonData )
+    | Submit Submission
     | Click ( Int, Int )
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        SwitchLanguage ( language, options ) ->
+            ( { model | language = language, options = options }, Cmd.none )
+
         Submit newSubmission ->
-            { model | submission = newSubmission }
+            ( { model | submission = newSubmission }, Cmd.none )
 
         Click ( i, n ) ->
             let
@@ -91,18 +121,29 @@ update msg model =
                         |> List.take (min 2 (i + 1))
                         |> List.reverse
             in
-            { model
+            ( { model
                 | submission = None
                 , options =
                     List.drop (i + 1) model.options
                         |> List.append swappedOptions
                         |> List.append (List.take (i - 1) model.options)
-            }
+              }
+            , Cmd.none
+            )
 
 
 checkOptions : List ButtonData -> Bool
 checkOptions options =
     List.sortBy .number options == options
+
+
+main =
+    Browser.element
+        { init = init
+        , update = update
+        , view = view
+        , subscriptions = \model -> Sub.none
+        }
 
 
 
