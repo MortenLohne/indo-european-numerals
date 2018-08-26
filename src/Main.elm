@@ -17,20 +17,16 @@ type Submission
 
 
 type alias Model =
-    { options : List ButtonData
+    { language : Language
+    , options : List ButtonData
     , submission : Submission
     }
 
 
-init : Model
-init =
-    { submission = None
-    , options =
-        [ { number = 1, nameRomanized = "One", nameIPA = "One" }
-        , { number = 2, nameRomanized = "Two", nameIPA = "Two" }
-        , { number = 3, nameRomanized = "Three", nameIPA = "Three" }
-        , { number = 4, nameRomanized = "Four", nameIPA = "Four" }
-        ]
+type alias Language =
+    { name : String
+    , description : String
+    , options : List ButtonData
     }
 
 
@@ -38,6 +34,38 @@ type alias ButtonData =
     { number : Int
     , nameRomanized : String
     , nameIPA : String
+    }
+
+
+english : Language
+english =
+    { name = "English"
+    , description = ""
+    , options =
+        List.map2
+            (\i name -> { number = i, nameRomanized = name, nameIPA = name })
+            (List.range 1 10)
+            [ "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten" ]
+    }
+
+
+tocharianB : Language
+tocharianB =
+    { name = "Tocharian B"
+    , description = ""
+    , options =
+        List.map2
+            (\i name -> { number = i, nameRomanized = name, nameIPA = name })
+            (List.range 1 10)
+            [ "ṣe", "wi", "trai", "śtwer", "piś", "ṣkas", "ṣukt", "okt", "ñu", "śak" ]
+    }
+
+
+init : Model
+init =
+    { submission = None
+    , language = tocharianB
+    , options = tocharianB.options
     }
 
 
@@ -51,23 +79,24 @@ type Msg
 
 
 update : Msg -> Model -> Model
-update msg { options, submission } =
+update msg model =
     case msg of
         Submit newSubmission ->
-            { options = options, submission = newSubmission }
+            { model | submission = newSubmission }
 
         Click ( i, n ) ->
             let
                 swappedOptions =
-                    List.drop (i - 1) options
+                    List.drop (i - 1) model.options
                         |> List.take (min 2 (i + 1))
                         |> List.reverse
             in
-            { submission = None
-            , options =
-                List.drop (i + 1) options
-                    |> List.append swappedOptions
-                    |> List.append (List.take (i - 1) options)
+            { model
+                | submission = None
+                , options =
+                    List.drop (i + 1) model.options
+                        |> List.append swappedOptions
+                        |> List.append (List.take (i - 1) model.options)
             }
 
 
