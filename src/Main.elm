@@ -6,6 +6,7 @@ import Html.Events exposing (..)
 import List
 import Platform.Cmd
 import Random
+import Random.List
 
 
 type Submission
@@ -88,27 +89,16 @@ init =
 
 randomLanguage : Cmd Msg
 randomLanguage =
-    Random.generate
-        (\i ->
-            let
-                language =
-                    List.drop i languages
-                        |> List.head
-            in
-            Maybe.withDefault english language
-        )
-        (Random.int 0 (List.length languages - 1))
-        |> Cmd.map
-            (\language ->
-                SwitchLanguage
-                    ( language
-                    , language.options
-                    )
+    Random.List.choose languages
+        |> Random.andThen
+            (\( languageMaybe, _ ) ->
+                let
+                    language =
+                        Maybe.withDefault english languageMaybe
+                in
+                Random.map2 Tuple.pair (Random.constant language) (Random.List.shuffle language.options)
             )
-
-
-
--- UPDATE
+        |> Random.generate SwitchLanguage
 
 
 type Msg
