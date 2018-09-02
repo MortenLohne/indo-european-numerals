@@ -2,6 +2,7 @@ module Main exposing (Model, Msg(..), init, main, update, view)
 
 import Browser
 import Html exposing (..)
+import Html.Attributes as Html
 import Html.Events exposing (..)
 import Languages exposing (Language, Numeral, english, languages)
 import List
@@ -20,6 +21,19 @@ type ButtonColor
     = Red
     | Green
     | Black
+
+
+colorStyle : ButtonColor -> String
+colorStyle buttonColor =
+    case buttonColor of
+        Red ->
+            "red"
+
+        Green ->
+            "green"
+
+        Black ->
+            "black"
 
 
 type alias ButtonData =
@@ -72,6 +86,7 @@ randomLanguage =
 type Msg
     = SwitchLanguage ( Language, List ButtonData )
     | Submit Submission
+    | Hint
     | Click ( Int, Int )
 
 
@@ -84,12 +99,29 @@ update msg model =
         Submit newSubmission ->
             ( { model | submission = newSubmission }, Cmd.none )
 
+        Hint ->
+            ( { model
+                | options =
+                    List.indexedMap
+                        (\i buttonData ->
+                            if (i + 1) == buttonData.number then
+                                { buttonData | color = Green }
+
+                            else
+                                { buttonData | color = Red }
+                        )
+                        model.options
+              }
+            , Cmd.none
+            )
+
         Click ( i, n ) ->
             let
                 swappedOptions =
                     List.drop (i - 1) model.options
                         |> List.take (min 2 (i + 1))
                         |> List.reverse
+                        |> List.map (\option -> { option | color = Black })
             in
             ( { model
                 | submission = None
@@ -145,8 +177,14 @@ renderButtons : List ButtonData -> Html Msg
 renderButtons options =
     div []
         [ div [] (renderNumberButtons options)
+        , renderHintButton
         , renderSubmitButton options
         ]
+
+
+renderHintButton : Html Msg
+renderHintButton =
+    button [ onClick Hint ] [ text "Hint" ]
 
 
 renderSubmitButton : List ButtonData -> Html Msg
@@ -166,9 +204,9 @@ renderSubmitButton options =
 renderNumberButtons : List ButtonData -> List (Html Msg)
 renderNumberButtons options =
     List.indexedMap
-        (\i { number, nameRomanized } ->
+        (\i { number, nameRomanized, color } ->
             button
-                [ onClick (Click ( i, number )) ]
+                [ onClick (Click ( i, number )), Html.style "color" (colorStyle color) ]
                 [ text nameRomanized ]
         )
         options
