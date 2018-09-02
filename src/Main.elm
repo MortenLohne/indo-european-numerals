@@ -3,6 +3,7 @@ module Main exposing (Model, Msg(..), init, main, update, view)
 import Browser
 import Html exposing (..)
 import Html.Events exposing (..)
+import Languages exposing (Language, Numeral, english, languages)
 import List
 import Platform.Cmd
 import Random
@@ -15,6 +16,20 @@ type Submission
     | None
 
 
+type ButtonColor
+    = Red
+    | Green
+    | Black
+
+
+type alias ButtonData =
+    { number : Int
+    , nameRomanized : String
+    , nameIPA : String
+    , color : ButtonColor
+    }
+
+
 type alias Model =
     { language : Language
     , options : List ButtonData
@@ -22,69 +37,20 @@ type alias Model =
     }
 
 
-type alias Language =
-    { name : String
-    , description : String
-    , options : List ButtonData
-    }
-
-
-type alias ButtonData =
-    { number : Int
-    , nameRomanized : String
-    , nameIPA : String
-    }
-
-
-english : Language
-english =
-    { name = "English"
-    , description = ""
-    , options =
-        List.map2
-            (\i name -> { number = i, nameRomanized = name, nameIPA = name })
-            (List.range 1 10)
-            [ "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten" ]
-    }
-
-
-tocharianB : Language
-tocharianB =
-    { name = "Tocharian B"
-    , description = ""
-    , options =
-        List.map2
-            (\i name -> { number = i, nameRomanized = name, nameIPA = name })
-            (List.range 1 10)
-            [ "ṣe", "wi", "trai", "śtwer", "piś", "ṣkas", "ṣukt", "okt", "ñu", "śak" ]
-    }
-
-
-irish : Language
-irish =
-    { name = "Irish"
-    , description = ""
-    , options =
-        List.map2
-            (\i name -> { number = i, nameRomanized = name, nameIPA = name })
-            (List.range 1 10)
-            [ "aon", "dó", "trí", "ceathair", "cúig", "sé", "seacht", "ocht", "naoi", "deich" ]
-    }
-
-
-languages =
-    [ english, tocharianB, irish ]
-
-
 init : () -> ( Model, Cmd Msg )
 init =
     \_ ->
         ( { submission = None
-          , language = tocharianB
-          , options = tocharianB.options
+          , language = english
+          , options = List.map buttonDataFromNumeral english.options
           }
         , randomLanguage
         )
+
+
+buttonDataFromNumeral : Numeral -> ButtonData
+buttonDataFromNumeral numeral =
+    { number = numeral.number, nameRomanized = numeral.nameRomanized, nameIPA = numeral.nameIPA, color = Black }
 
 
 randomLanguage : Cmd Msg
@@ -96,7 +62,9 @@ randomLanguage =
                     language =
                         Maybe.withDefault english languageMaybe
                 in
-                Random.map2 Tuple.pair (Random.constant language) (Random.List.shuffle language.options)
+                Random.map2 Tuple.pair
+                    (Random.constant language)
+                    (Random.List.shuffle (List.map buttonDataFromNumeral language.options))
             )
         |> Random.generate SwitchLanguage
 
