@@ -175,23 +175,41 @@ view { options, submission } =
 
 renderButtons : List ButtonData -> Html Msg
 renderButtons options =
-    div []
-        [ div
-            [ Html.style "display" "grid"
-            , Html.style "max-width" "400px"
-            , Html.style "grid-template-columns" "1fr 1fr 1fr"
-            , Html.style "grid-template-rows" "1fr 1fr 1fr"
-            , Html.style "gap" "10px"
-            ]
-            (renderNumberButtons options)
-        , renderHintButton
-        , renderSubmitButton options
+    let
+        buttons =
+            renderNumberButtons options
+
+        -- The number 10 button goes between the hint and submit buttons
+        tenButton =
+            buttons |> List.reverse |> List.head |> Maybe.withDefault (text "")
+
+        firstNineButtons =
+            buttons |> List.reverse |> List.tail |> Maybe.withDefault [] |> List.reverse
+    in
+    div
+        [ Html.style "display" "grid"
+        , Html.style "max-width" "400px"
+        , Html.style "grid-template-columns" "1fr 1fr 1fr"
+        , Html.style "grid-template-rows" "1fr 1fr 1fr"
+        , Html.style "grid-auto-rows" "200px"
+        , Html.style "grid-auto-columns" "200px"
+        , Html.style "gap" "10px"
+        , Html.style "justify-items" "center"
+        , Html.style "align-items" "center"
         ]
+        (firstNineButtons ++ [ renderHintButton, tenButton, renderSubmitButton options ])
 
 
 renderHintButton : Html Msg
 renderHintButton =
-    button [ onClick Hint ] [ text "Hint" ]
+    button
+        [ onClick Hint
+        , Html.style "justify-items" "center"
+        , Html.style "align-items" "center"
+        , Html.style "width" "100px"
+        , Html.style "height" "50px"
+        ]
+        [ text "Hint" ]
 
 
 renderSubmitButton : List ButtonData -> Html Msg
@@ -204,6 +222,8 @@ renderSubmitButton options =
              else
                 Submit Incorrect
             )
+        , Html.style "width" "100px"
+        , Html.style "height" "50px"
         ]
         [ text "Submit" ]
 
@@ -216,7 +236,7 @@ renderNumberButtons options =
                 styles =
                     [ Html.style "height" "200px"
                     , Html.style "width" "200px"
-                    , Html.style "font-size" "20px"
+                    , Html.style "font-size" "40px"
                     , Html.style "color" (colorStyle color)
                     ]
             in
