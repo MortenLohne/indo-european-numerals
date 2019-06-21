@@ -176,7 +176,14 @@ view { options, submission } =
 renderButtons : List ButtonData -> Html Msg
 renderButtons options =
     div []
-        [ div [] (renderNumberButtons options)
+        [ div
+            [ Html.style "display" "grid"
+            , Html.style "max-width" "400px"
+            , Html.style "grid-template-columns" "1fr 1fr 1fr"
+            , Html.style "grid-template-rows" "1fr 1fr 1fr"
+            , Html.style "gap" "10px"
+            ]
+            (renderNumberButtons options)
         , renderHintButton
         , renderSubmitButton options
         ]
@@ -205,8 +212,25 @@ renderNumberButtons : List ButtonData -> List (Html Msg)
 renderNumberButtons options =
     List.indexedMap
         (\i { number, nameRomanized, color } ->
+            let
+                styles =
+                    [ Html.style "height" "200px"
+                    , Html.style "width" "200px"
+                    , Html.style "font-size" "20px"
+                    , Html.style "color" (colorStyle color)
+                    ]
+            in
             button
-                [ onClick (Click ( i, number )), Html.style "color" (colorStyle color) ]
-                [ text nameRomanized ]
+                (onClick
+                    (Click ( i, number ))
+                    :: (if i == 9 then
+                            Html.style "grid-column-start" "2" :: styles
+
+                        else
+                            styles
+                       )
+                )
+                [ text nameRomanized
+                ]
         )
         options
