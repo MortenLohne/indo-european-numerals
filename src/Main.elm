@@ -14,6 +14,10 @@ import Random
 import Random.List
 
 
+buttonSize =
+    150
+
+
 type Submission
     = Correct
     | Incorrect
@@ -192,12 +196,12 @@ renderButtons options =
     div
         [ css
             [ property "display" "grid"
-            , maxWidth (px 400)
+            , maxWidth (buttonSize * 2 |> px)
             , property "grid-template-columns" "1fr 1fr 1fr"
             , property "grid-template-rows" "1fr 1fr 1fr"
-            , property "grid-auto-rows" "200px"
-            , property "grid-auto-columns" "200px"
-            , property "gap" "10px"
+            , property "grid-auto-rows" <| String.fromInt buttonSize ++ "px"
+            , property "grid-auto-columns" <| String.fromInt buttonSize ++ "px"
+            , property "gap" <| String.fromFloat (buttonSize / 20) ++ "px"
             , property "justify-items" "center"
             , property "align-items" "center"
             ]
@@ -208,10 +212,9 @@ renderButtons options =
 renderHintButton : Html Msg
 renderHintButton =
     styled button
-        [ property "justify-items" "center"
-        , property "align-items" "center"
-        , width (px 100)
-        , height (px 50)
+        [ width (buttonSize / 2 |> px)
+        , height (buttonSize / 4 |> px)
+        , fontSize (buttonSize / 10 |> px)
         ]
         [ onClick Hint ]
         [ text "Hint" ]
@@ -221,8 +224,9 @@ renderSubmitButton : List ButtonData -> Html Msg
 renderSubmitButton options =
     styled
         button
-        [ width (px 100)
-        , height (px 50)
+        [ width (buttonSize / 2 |> px)
+        , height (buttonSize / 4 |> px)
+        , fontSize (buttonSize / 10 |> px)
         ]
         [ onClick
             (if checkOptions options then
@@ -241,9 +245,9 @@ renderNumberButtons options =
         (\i { number, nameRomanized, clr } ->
             let
                 styles =
-                    [ height (px 200)
-                    , width (px 200)
-                    , fontSize (px 40)
+                    [ height (px buttonSize)
+                    , width (px buttonSize)
+                    , fontSize (buttonSize / 5 |> px)
                     , color (colorStyle clr)
                     ]
             in
