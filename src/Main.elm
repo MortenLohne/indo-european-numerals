@@ -1,9 +1,12 @@
 module Main exposing (Model, Msg(..), init, main, update, view)
 
 import Browser
-import Html exposing (..)
+import Css exposing (..)
+import Html
 import Html.Attributes as Html
-import Html.Events exposing (..)
+import Html.Styled exposing (..)
+import Html.Styled.Attributes exposing (css, href, src)
+import Html.Styled.Events exposing (..)
 import Languages exposing (Language, Numeral, english, languages)
 import List
 import Platform.Cmd
@@ -23,24 +26,24 @@ type ButtonColor
     | Black
 
 
-colorStyle : ButtonColor -> String
+colorStyle : ButtonColor -> Color
 colorStyle buttonColor =
     case buttonColor of
         Red ->
-            "red"
+            rgb 255 0 0
 
         Green ->
-            "green"
+            rgb 0 255 0
 
         Black ->
-            "black"
+            rgb 0 0 0
 
 
 type alias ButtonData =
     { number : Int
     , nameRomanized : String
     , nameIPA : String
-    , color : ButtonColor
+    , clr : ButtonColor
     }
 
 
@@ -64,7 +67,7 @@ init =
 
 buttonDataFromNumeral : Numeral -> ButtonData
 buttonDataFromNumeral numeral =
-    { number = numeral.number, nameRomanized = numeral.nameRomanized, nameIPA = numeral.nameIPA, color = Black }
+    { number = numeral.number, nameRomanized = numeral.nameRomanized, nameIPA = numeral.nameIPA, clr = Black }
 
 
 randomLanguage : Cmd Msg
@@ -105,10 +108,10 @@ update msg model =
                     List.indexedMap
                         (\i buttonData ->
                             if (i + 1) == buttonData.number then
-                                { buttonData | color = Green }
+                                { buttonData | clr = Green }
 
                             else
-                                { buttonData | color = Red }
+                                { buttonData | clr = Red }
                         )
                         model.options
               }
@@ -121,7 +124,7 @@ update msg model =
                     List.drop (i - 1) model.options
                         |> List.take (min 2 (i + 1))
                         |> List.reverse
-                        |> List.map (\option -> { option | color = Black })
+                        |> List.map (\option -> { option | clr = Black })
             in
             ( { model
                 | submission = None
@@ -143,7 +146,7 @@ main =
     Browser.element
         { init = init
         , update = update
-        , view = view
+        , view = view >> toUnstyled
         , subscriptions = \model -> Sub.none
         }
 
@@ -187,34 +190,40 @@ renderButtons options =
             buttons |> List.reverse |> List.tail |> Maybe.withDefault [] |> List.reverse
     in
     div
-        [ Html.style "display" "grid"
-        , Html.style "max-width" "400px"
-        , Html.style "grid-template-columns" "1fr 1fr 1fr"
-        , Html.style "grid-template-rows" "1fr 1fr 1fr"
-        , Html.style "grid-auto-rows" "200px"
-        , Html.style "grid-auto-columns" "200px"
-        , Html.style "gap" "10px"
-        , Html.style "justify-items" "center"
-        , Html.style "align-items" "center"
+        [ css
+            [ property "display" "grid"
+            , maxWidth (px 400)
+            , property "grid-template-columns" "1fr 1fr 1fr"
+            , property "grid-template-rows" "1fr 1fr 1fr"
+            , property "grid-auto-rows" "200px"
+            , property "grid-auto-columns" "200px"
+            , property "gap" "10px"
+            , property "justify-items" "center"
+            , property "align-items" "center"
+            ]
         ]
         (firstNineButtons ++ [ renderHintButton, tenButton, renderSubmitButton options ])
 
 
 renderHintButton : Html Msg
 renderHintButton =
-    button
-        [ onClick Hint
-        , Html.style "justify-items" "center"
-        , Html.style "align-items" "center"
-        , Html.style "width" "100px"
-        , Html.style "height" "50px"
+    styled button
+        [ property "justify-items" "center"
+        , property "align-items" "center"
+        , width (px 100)
+        , height (px 50)
         ]
+        [ onClick Hint ]
         [ text "Hint" ]
 
 
 renderSubmitButton : List ButtonData -> Html Msg
 renderSubmitButton options =
-    button
+    styled
+        button
+        [ width (px 100)
+        , height (px 50)
+        ]
         [ onClick
             (if checkOptions options then
                 Submit Correct
@@ -222,8 +231,6 @@ renderSubmitButton options =
              else
                 Submit Incorrect
             )
-        , Html.style "width" "100px"
-        , Html.style "height" "50px"
         ]
         [ text "Submit" ]
 
@@ -231,25 +238,25 @@ renderSubmitButton options =
 renderNumberButtons : List ButtonData -> List (Html Msg)
 renderNumberButtons options =
     List.indexedMap
-        (\i { number, nameRomanized, color } ->
+        (\i { number, nameRomanized, clr } ->
             let
                 styles =
-                    [ Html.style "height" "200px"
-                    , Html.style "width" "200px"
-                    , Html.style "font-size" "40px"
-                    , Html.style "color" (colorStyle color)
+                    [ height (px 200)
+                    , width (px 200)
+                    , fontSize (px 40)
+                    , color (colorStyle clr)
                     ]
             in
-            button
-                (onClick
-                    (Click ( i, number ))
-                    :: (if i == 9 then
-                            Html.style "grid-column-start" "2" :: styles
+            styled button
+                (if i == 9 then
+                    property "grid-column-start" "2" :: styles
 
-                        else
-                            styles
-                       )
+                 else
+                    styles
                 )
+                [ onClick
+                    (Click ( i, number ))
+                ]
                 [ text nameRomanized
                 ]
         )
